@@ -1,70 +1,56 @@
 const { movies } = require('../models');
 
-class MoviesController{
-    static GetAllMovies(req,res){
-        movies.findAll()
-            .then(result => {
-                res.status(200).json(result);
-            })
-            .catch(err => {
-                res.status(500).json(err);
-            })
+exports.GetAllMovies = async (req, res, next) => {
+    try {
+      const tempMovie = await movies.findAll();
+      res.status(200).json(tempMovie);
+    } catch (error) {
+      next(error);
     }
-    static GetMoviesByID(req,res){
-        let id = +req.params.id
-        movies.findByPk(id)
-            .then(result => {
-                res.status(200).json(result);
-            })
-            .catch(err => {
-                res.status(500).json(err);
-            })
-    }
-    static createMovies(req,res){
-        const { title, synopsis, trailerUrl, imgUrl, rating, status} = req.body;
-        movies.create({
-            title, synopsis, trailerUrl, imgUrl, rating, status
-            })
-            .then(result => {
-                res.status(200).json(result);
-            })
-            .catch(err => {
-                res.status(500).json(err);
-            })
-    }
-    static updateMovies(req,res){
-        let id = +req.params.id
-        const { title, synopsis, trailerUrl, imgUrl, rating, status} = req.body;
-        let data = { title, synopsis, trailerUrl, imgUrl, rating, status }
-        movies.update(
-            data,
-            {
-                where:{
-                    id
-                },
-                returning: true
-            })
-            .then(result => {
-                res.status(200).json(result);
-            })
-            .catch(err => {
-                res.status(500).json(err);
-            })
-    }
-    static deleteMovies(req,res){
-        let id = +req.params.id
-        movies.destroy({
-            where:{
-                id
-            }
-            })
-            .then(result => {
-                res.status(200).json(result);
-            })
-            .catch(err => {
-                res.status(500).json(err);
-            })
-    }
-}
+};
 
-module.exports = MoviesController;
+exports.GetMoviesByID = async (req, res, next) => {
+    const { id } = req.params;
+    try {
+      const tempMovie = await movies.findByPk(id);
+      if (!tempMovie) throw new NotFoundError();
+      res.status(200).json(tempMovie);
+    } catch (error) {
+      next(error);
+    }
+};
+
+exports.createMovies = async (req, res, next) => {
+    const { title, synopsis, trailerUrl, imgUrl, rating, status } = req.body;
+    try {
+      const tempMovie = await movies.create({ title, synopsis, trailerUrl, imgUrl, rating, status });
+      res.status(201).json(tempMovie);
+    } catch (error) {
+      next(error);
+    }
+};
+
+exports.updateMovies = async (req, res, next) => {
+    const { id } = req.params;
+    const { title, synopsis, trailerUrl, imgUrl, rating, status } = req.body;
+    try {
+      const tempMovie = await movies.findByPk(id);
+      if (!tempMovie) throw new NotFoundError();
+      await tempMovie.update({ title, synopsis, trailerUrl, imgUrl, rating, status });
+      res.status(200).json(tempMovie);
+    } catch (error) {
+      next(error);
+    }
+};
+
+exports.deleteMovies = async (req, res, next) => {
+    const { id } = req.params;
+    try {
+      const tempMovie = await movies.findByPk(id);
+      if (!tempMovie) throw new NotFoundError();
+      await tempMovie.destroy();
+      res.status(200).json({ message: "Product has been deleted" });
+    } catch (error) {
+      next(error);
+    }
+};
